@@ -1,0 +1,68 @@
+version: "3.7"
+
+services:
+
+  h2-proxy:
+    # Don't use this proxy in prod
+    build: ./docker/dev/h2-proxy
+    container_name: h2-proxy
+    depends_on:
+      - nginx
+    ports:
+      - "80:80"
+      - "443:443"
+
+  nginx:
+    build: ./docker/dev/nginx
+    container_name: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./app/public:/app/public:rw,cached
+    depends_on:
+      - php-fpm
+      - pgsql
+      - redis
+
+  php-fpm:
+    build: ./docker/dev/php/7.3/fpm
+    container_name: php-fpm
+    volumes:
+      - ./app:/app:rw,cached
+    depends_on:
+      - pgsql
+      - redis
+
+  php-cli:
+    build: ./docker/dev/php/7.3/cli
+    container_name: php-cli
+    volumes:
+      - ./app:/app:rw,cached
+      - composer:/root/.composer/cache
+    depends_on:
+      - pgsql
+      - redis
+
+  pgsql:
+    image: postgres:12-alpine
+    container_name: pgsql
+    volumes:
+      - db-data:/var/lib/postgresql/data/pgdata
+      # /var/lib/postgresql/data:rw
+    environment:
+      POSTGRES_USER: posgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: prueba
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - 54321:5432
+
+  redis:
+    image: redis:5-alpine
+    container_name: redis
+    ports:
+      - 6379:6379
+
+volumes:
+  db-data:
+  composer:
