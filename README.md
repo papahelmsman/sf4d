@@ -1,9 +1,11 @@
-
 <p align="center"><img src="docs/assets/img/head_logo.svg" width="250"></p>
 
 <h1 style="text-align:center;">sf4d </h1>
 <h4 style="text-align:center;">Symfony run-time system based on Docker and Docker-compose Tools</h4>
 </br>
+
+nginx 17.2 - php7.3-fpm - postgresql 11.2 - redis
+
 
 ## Table of Contents
 

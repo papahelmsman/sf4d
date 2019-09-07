@@ -1,3 +1,5 @@
 /.idea/
 /logs
-/symfony
+/app/*
+!/app/public/index.php
+!/app/public/info.php

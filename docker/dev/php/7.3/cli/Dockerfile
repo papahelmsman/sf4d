@@ -18,4 +18,6 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/bin --fil
 
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
-WORKDIR /app
+WORKDIR /usr/srv/app
+
+EXPOSE 9000
