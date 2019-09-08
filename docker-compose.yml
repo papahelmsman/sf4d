@@ -2,62 +2,91 @@ version: "3.7"
 
 services:
 
-  h2-proxy:
-    # Don't use this proxy in prod
-    build: ./docker/dev/h2-proxy
-    container_name: app-proxy
-    depends_on:
-      - nginx
-    ports:
-      - "80:80"
-      - "443:443"
+  #h2-proxy:
+  #  # Don't use this proxy in prod
+  #  build: ./docker/dev/h2-proxy
+  #  container_name: app-proxy
+  #  links:
+  #    - nginx
+  #  ports:
+  #    - "80:80"
+  #    - "443:443"
 
-  nginx:
+  app-nginx:
     build:
       context: ./docker/dev/nginx
-      dockerfile: Dockerfile
-      args:
-        MAX_EXECUTION_TIME: ${MAX_EXECUTION_TIME}
     container_name: app-nginx
+    links:
+      - app-php-fpm
     ports:
-      - "8081:80"
+      - "80:80"
     volumes:
       - ./app/public:/usr/srv/app/public:ro
-    depends_on:
-      - php-fpm
-      - pgsql
+      - ./logs/nginx:/var/log/nginx
 
-  php-fpm:
-    build: ./docker/dev/php/7.3/fpm
-    container_name: app-php
+  app-php-fpm:
+    build:
+      context: ./docker/dev/php/7.3/fpm
+      args:
+        TIMEZONE: ${TIMEZONE:-UTC}
+    container_name: app-php-fpm
     volumes:
       - ./app:/usr/srv/app:rw,cached
-    depends_on:
-      - pgsql
+    links:
+      - app-db
+      - app-redis
 
-  php-cli:
-    build: ./docker/dev/php/7.3/cli
-    container_name: app-cli
+  app-php-cli:
+    build:
+      context: ./docker/dev/php/7.3/cli
+      args:
+        TIMEZONE: ${TIMEZONE:-UTC}
+    container_name: app-php-cli
     volumes:
       - ./app:/usr/srv/app:rw,cached
-      - app-composer:/root/.composer/cache
-    depends_on:
-      - pgsql
+      - composer:/root/.composer/cache
+    links:
+      - app-db
+      - app-redis
     tty: true
 
-  pgsql:
-    image: postgres:12-alpine
+  app-db:
+    image: postgres:11.2-alpine
     container_name: app-db
-    volumes:
-      - app-db-data:/var/lib/postgresql/data/pgdata
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-symfonist}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
       POSTGRES_DB: ${POSTGRES_DB:-app_db}
-      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "${POSTGRES_LOCAL_PORT:-54321}:5432"
+      - "54321:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data:rw
+
+  app-adminer:
+    image: adminer
+    container_name: app-adminer
+    links:
+      - app-db
+    restart: always
+    ports:
+      - "2000:8080"
+
+  app-redis:
+    image: redis:5-alpine
+    container_name: app-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/data
+    command:
+      - 'redis-server'
+      - '--databases 2'
+      - '--save 900 1'
+      - '--save 300 10'
+      - '--save 60 10000'
+      - '--requirepass secret'
 
 volumes:
-  app-db-data:
-  app-composer:
+  db-data:
+  redis:
+  composer:
