@@ -18,8 +18,15 @@ nginx 17.2 - php7.3-fpm - postgresql 11.2 - redis
 
 In order to run this run-time system locally you will need a few tools installed:
 
-  * [Docker](https://www.docker.com/get-docker) - Recommended but not required (You can also use the easy install script at [https://get.docker.com/](https://get.docker.com/))
+  * [Git](https://git-scm.com/downloads)
 
+  * [Docker](https://docs.docker.com/install/)
+  
+  * [Docker-Compose](https://getcomposer.org/)
+  
+  * [GNU Make](https://getcomposer.org/) 
+  
+        
 
 ## Installation
 
@@ -30,8 +37,10 @@ Clone the sf4d Git Repo from https://github.com/papahelmsman/sf4d to a new folde
 
 First, clone this repository :
 
-```bash
-$ git clone https://github.com/papahelmsman/sf4d.git
+``` bash
+git clone https://github.com/papahelmsman/sf4d.git [path-tu-your-project-folder]
+cd [path-tu-your-project-folder]
+docker-compose up -d
 ```
 
 ### 2.Installing a Symfony application
@@ -43,4 +52,4 @@ Make sure you adjust `database_host` in `parameters.yml` to the database contain
 Then, run:
 
 ```bash
-$ docker-compose up
+$ docker-compose up -d

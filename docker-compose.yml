@@ -2,15 +2,17 @@ version: "3.7"
 
 services:
 
-  #h2-proxy:
-  #  # Don't use this proxy in prod
-  #  build: ./docker/dev/h2-proxy
-  #  container_name: app-proxy
-  #  links:
-  #    - nginx
-  #  ports:
-  #    - "80:80"
-  #    - "443:443"
+  app-h2-proxy:
+    # Don't use this proxy in prod
+    build: ./docker/dev/h2-proxy
+    container_name: app-h2-proxy
+    depends_on:
+      - app-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./logs/h2-proxy:/var/log/nginx
 
   app-nginx:
     build:
@@ -19,7 +21,7 @@ services:
     links:
       - app-php-fpm
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./app/public:/usr/srv/app/public:ro
       - ./logs/nginx:/var/log/nginx
