@@ -30,7 +30,7 @@ In order to run this run-time system locally you will need a few tools installed
 
 ## Installation
 
-Clone the sf4d Git Repo from https://github.com/papahelmsman/sf4d to a new folder structure martingale/ui:
+Clone the sf4d Git Repo from https://github.com/papahelmsman/sf4d to a new folder.
 
 
 ### 1.Cloning a repository
@@ -129,19 +129,35 @@ And change `dbal` section:
         schema_filter: '~^(?!work_projects_tasks_seq)~'
 ```
 
+Change the `DATABASE` parameters in `/app/.env`.
+
+Comment out the following line:
+
+``` dotenv
+DATABASE_URL=mysql://db_user:db_password@127.0.0.1:3306/db_name
+```
+
+and add below:
+
+``` dotenv
+DATABASE_URL="pgsql://db_user:db_password@127.0.0.1:5432/db_name"
+```
+Substitute your credentials:
+
+``` dotenv
+DATABASE_URL=pgsql://symfonist:secret@192.168.99.100:54321/app_db
+```
 
 
-Make sure you adjust `database_host` in `parameters.yml` to the database container alias "db"
-
-Then, run:
+Then, run docker containers:
 
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 ### Use Adminer tool
 
-```
+``` http request
 http://sf4d.dockerhost:2000/
 ```
 
