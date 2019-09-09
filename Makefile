@@ -25,7 +25,7 @@ docker-build:
 app-init: app-composer-install app-assets-install app-oauth-keys app-wait-db app-migrations app-fixtures app-ready
 
 app-clear:
-	docker run --rm -v ${PWD}/app:/usr/srv/app --workdir=/usr/srv/app alpine rm -f .ready
+	docker run --rm -v ${PWD}/apps/$APP_NAME:/$WORKDIR/$APP_NAME --workdir=/$WORKDIR/$APP_NAME alpine rm -f .ready
 
 app-composer-install:
 	docker-compose run --rm app-php-cli composer install
@@ -50,7 +50,7 @@ app-fixtures:
 	docker-compose run --rm app-php-cli php bin/console doctrine:fixtures:load --no-interaction
 
 app-ready:
-	docker run --rm -v ${PWD}/app:/app --workdir=/usr/srv/app alpine touch .ready
+	docker run --rm -v ${PWD}/apps/$APP_NAME:/$WORKDIR/$APP_NAME --workdir=/$WORKDIR/$APP_NAME alpine touch .ready
 
 app-assets-dev:
 	docker-compose run --rm app-node npm run dev

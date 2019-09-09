@@ -22,10 +22,10 @@ In order to run this run-time system locally you will need a few tools installed
 
   * [Docker](https://docs.docker.com/install/) 
   
-  * [Docker-Compose](https://getcomposer.org/)
+  * [Docker-Compose](https://docs.docker.com/compose/install/)
   
-  * [GNU Make](https://getcomposer.org/) 
-  
+  * [GNU Make](https://www.gnu.org/software/make/) 
+    * [Windows Installation](https://chocolatey.org/packages/make)
         
 
 ## Installation

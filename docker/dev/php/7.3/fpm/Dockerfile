@@ -4,7 +4,10 @@ LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
 
 ARG APCU_VERSION=5.1.11
 ARG TIMEZONE
-ENV TIMEZONE=${TIMEZONE}
+ARG WORKDIR
+ARG APP_NAME
+
+ENV TIMEZONE=$TIMEZONE
 
 RUN apt-get update && apt-get install -y \
     git \
@@ -48,17 +51,20 @@ RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
 RUN pecl install apcu-${APCU_VERSION} \
     && docker-php-ext-enable apcu
 
-RUN pecl install -o -f redis-beta \
+RUN pecl install -o -f redis \
     && rm -rf /tmp/pear \
     && docker-php-ext-enable redis
 
-RUN pecl install xdebug \
+RUN pecl install xdebug-beta \
     && docker-php-ext-enable xdebug
 
-COPY xdebug.ini /usr/local/etc/php/conf.d/
-COPY symfony.ini /usr/local/etc/php/conf.d/
+COPY docker/dev/php/7.3/fpm/xdebug.ini /usr/local/etc/php/conf.d/
+COPY docker/dev/php/7.3/fpm/symfony.ini /usr/local/etc/php/conf.d/
 
 ## Permission fix
 #RUN usermod -u 1000 www-data
+RUN chown -R www-data:www-data /$WORKDIR
 
-WORKDIR /usr/srv/app
+WORKDIR /$WORKDIR/$APP_NAME
+
+USER www-data

@@ -14,5 +14,8 @@ FROM nginx:1.17-alpine
 
 RUN mkdir -p /etc/nginx/ssl/
 COPY --from=0 cert.key cert.crt /etc/nginx/ssl/
-COPY conf.d /etc/nginx/conf.d/
+COPY docker/dev/h2-proxy/conf.d /etc/nginx/conf.d/
+
+EXPOSE 80
+EXPOSE 443
 

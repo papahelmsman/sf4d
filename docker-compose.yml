@@ -1,81 +1,107 @@
 version: "3.7"
 
 services:
-
-  app-h2-proxy:
+  
+  sf4d-h2-proxy:
     # Don't use this proxy in prod
-    build: ./docker/dev/h2-proxy
-    container_name: app-h2-proxy
+    build: 
+      context: ./
+      dockerfile: docker/dev/h2-proxy/Dockerfile
+    container_name: sf4d-h2-proxy
+    hostname: sf4d-h2-proxy
     depends_on:
-      - app-nginx
+      - sf4d-nginx
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./logs/h2-proxy:/var/log/nginx
+      - "./volumes/$APP_NAME/http2-proxy:/var/log/nginx"
 
-  app-nginx:
+  sf4d-nginx:
     build:
-      context: ./docker/dev/nginx
-    container_name: app-nginx
-    links:
-      - app-php-fpm
+      context: ./
+      dockerfile: docker/dev/nginx/Dockerfile
+      args:
+        WORKDIR: ${WORKDIR:-var/www}
+        APP_NAME: ${APP_NAME:-app.test}
+    container_name: sf4d-nginx
+    hostname: sf4d-nginx
+    restart: on-failure
+    depends_on:
+      - sf4d-php-fpm
     ports:
-      - "8080:80"
+      - "${NGINX_LOCAL_PORT:-81}:80"
     volumes:
-      - ./app/public:/usr/srv/app/public:ro
-      - ./logs/nginx:/var/log/nginx
+      - "./apps/$APP_NAME/public:/${WORKDIR}/${APP_NAME}/public"
+      - "./volumes/$APP_NAME/nginx/logs:/var/log/nginx:rw"
 
-  app-php-fpm:
+  sf4d-php-fpm:
     build:
-      context: ./docker/dev/php/7.3/fpm
+      context: ./
+      dockerfile: docker/dev/php/7.3/fpm/Dockerfile
       args:
         TIMEZONE: ${TIMEZONE:-UTC}
-    container_name: app-php-fpm
+        WORKDIR: ${WORKDIR:-var/www}
+        APP_NAME: ${APP_NAME:-app.test}
+    container_name: sf4d-php-fpm
+    hostname: sf4d-php-fpm
     volumes:
-      - ./app:/usr/srv/app:rw,cached
-    links:
-      - app-db
-      - app-redis
+      - "./apps/$APP_NAME:/$WORKDIR/$APP_NAME"
+      - "./volumes/$APP_NAME/php/var/cache:/$WORKDIR/$APP_NAME/var/cache:rw"
+      - "./volumes/$APP_NAME/php/var/sessions:/$WORKDIR/$APP_NAME/var/sessions:rw"
+      - "./volumes/$APP_NAME/php/var/logs:/$WORKDIR/$APP_NAME/var/logs:rw"
+    depends_on:
+      - sf4d-db
+      - sf4d-redis
+    #user: ${LOCAL_USER}
 
-  app-php-cli:
+  sf4d-php-cli:
     build:
-      context: ./docker/dev/php/7.3/cli
+      context: ./
+      dockerfile: docker/dev/php/7.3/cli/Dockerfile
       args:
         TIMEZONE: ${TIMEZONE:-UTC}
-    container_name: app-php-cli
+        WORKDIR: ${WORKDIR:-var/www}
+        APP_NAME: ${APP_NAME:-app.test}
+    container_name: sf4d-php-cli
+    hostname: sf4d-php-cli
     volumes:
-      - ./app:/usr/srv/app:rw,cached
-      - composer:/root/.composer/cache
+      - ./apps/$APP_NAME:/$WORKDIR/$APP_NAME
+      - composer:/root/.composer/cache:rw
     links:
-      - app-db
-      - app-redis
+      - sf4d-db
+      - sf4d-redis
+    #user: ${LOCAL_USER}
     tty: true
 
-  app-db:
+  sf4d-db:
     image: postgres:11.2-alpine
-    container_name: app-db
+    container_name: sf4d-db
+    hostname: sf4d-db
+    restart: on-failure
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-symfonist}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
       POSTGRES_DB: ${POSTGRES_DB:-app_db}
     ports:
-      - "54321:5432"
+      - "${POSTGRES_LOCAL_PORT:-54321}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data:rw
 
-  app-adminer:
+  sf4d-adminer:
     image: adminer
-    container_name: app-adminer
-    links:
-      - app-db
+    container_name: sf4d-adminer
+    hostname: sf4d-adminer
     restart: always
+    links:
+      - sf4d-db
     ports:
-      - "2000:8080"
+      - '${ADMINER_LOCAL_PORT:-8080}:8080'
 
-  app-redis:
+  sf4d-redis:
     image: redis:5-alpine
-    container_name: app-redis
+    container_name: sf4d-redis
+    hostname: sf4d-redis
     ports:
       - "6379:6379"
     volumes:

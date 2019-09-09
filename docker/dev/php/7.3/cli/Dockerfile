@@ -4,7 +4,11 @@ LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
 
 ARG APCU_VERSION=5.1.11
 ARG TIMEZONE
-ENV TIMEZONE=${TIMEZONE}
+ARG WORKDIR
+ARG APP_NAME
+WORKDIR /$WORKDIR/$APP_NAME
+ENV TIMEZONE=$TIMEZONE
+ENV COMPOSER_ALLOW_SUPERUSER 1
 
 RUN apt-get update && apt-get install -y \
     git \
@@ -52,19 +56,26 @@ RUN pecl install -o -f redis \
     && rm -rf /tmp/pear \
     && docker-php-ext-enable redis
 
-RUN pecl install xdebug \
+RUN pecl install xdebug-beta \
     && docker-php-ext-enable xdebug
 
-COPY xdebug.ini /usr/local/etc/php/conf.d/
-COPY symfony.ini /usr/local/etc/php/conf.d
+COPY docker/dev/php/7.3/cli/xdebug.ini /usr/local/etc/php/conf.d/
+COPY docker/dev/php/7.3/cli/symfony.ini /usr/local/etc/php/conf.d/
+
+#RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/bin --filename=composer --quiet
+
+# install Composer
+RUN curl -sS https://getcomposer.org/installer | php && \
+    mv composer.phar /usr/local/bin/composer && \
+    chmod +x /usr/local/bin/composer
 
 ## Permission fix
 #RUN usermod -u 1000 www-data
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/bin --filename=composer --quiet
 
-ENV COMPOSER_ALLOW_SUPERUSER 1
-
+RUN composer create-project symfony/website-skeleton .
+RUN chown -R www-data:www-data /$WORKDIR
+# Create `sf` alias for `php bin/console` command
 RUN echo 'alias sf="php bin/console"' >> ~/.bashrc
 
-WORKDIR /usr/srv/app
+USER www-data
